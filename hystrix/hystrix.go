@@ -23,19 +23,22 @@ func (e CircuitError) Error() string {
 // command models the state used for a single execution on a circuit. "hystrix command" is commonly
 // used to describe the pairing of your run/fallback functions with a circuit.
 type command struct {
-	sync.Mutex
+	sync.RWMutex
 
-	ticket       *struct{}
-	start        time.Time
-	errChan      chan error
-	finished     chan bool
-	fallbackOnce *sync.Once
-	circuit      *CircuitBreaker
-	run          runFunc
-	fallback     fallbackFunc
-	runDuration  time.Duration
-	events       []string
-	timedOut     bool
+	ticket         *struct{}
+	overflowTicket *struct{}
+	start          time.Time
+	errChan        chan error
+	finished       chan bool
+	timeoutChan    chan struct{}
+	fallbackOnce   *sync.Once
+	circuit        *CircuitBreaker
+	run            runFunc
+	fallback       fallbackFunc
+	runDuration    time.Duration
+	events         []string
+	timedOut       bool
+	ticketChecked  chan struct{}
 }
 
 var (
@@ -54,12 +57,14 @@ var (
 // Define a fallback function if you want to define some code to execute during outages.
 func Go(name string, run runFunc, fallback fallbackFunc) chan error {
 	cmd := &command{
-		run:          run,
-		fallback:     fallback,
-		start:        time.Now(),
-		errChan:      make(chan error, 1),
-		finished:     make(chan bool, 1),
-		fallbackOnce: &sync.Once{},
+		run:           run,
+		fallback:      fallback,
+		start:         time.Now(),
+		errChan:       make(chan error, 1),
+		finished:      make(chan bool, 1),
+		fallbackOnce:  &sync.Once{},
+		timeoutChan:   make(chan struct{}, 1),
+		ticketChecked: make(chan struct{}, 1),
 	}
 
 	// dont have methods with explicit params and returns
@@ -74,13 +79,16 @@ func Go(name string, run runFunc, fallback fallbackFunc) chan error {
 	cmd.circuit = circuit
 
 	go func() {
-		defer func() { cmd.finished <- true }()
+		defer func() {
+			cmd.finished <- true
+		}()
 
 		// Circuits get opened when recent executions have shown to have a high error rate.
 		// Rejecting new executions allows backends to recover, and the circuit will allow
 		// new traffic when it feels a healthly state has returned.
 		if !cmd.circuit.AllowRequest() {
 			cmd.errorWithFallback(ErrCircuitOpen)
+			close(cmd.ticketChecked)
 			return
 		}
 
@@ -89,21 +97,48 @@ func Go(name string, run runFunc, fallback fallbackFunc) chan error {
 		// When requests slow down but the incoming rate of requests stays the same, you have to
 		// run more at a time to keep up. By controlling concurrency during these situations, you can
 		// shed load which accumulates due to the increasing ratio of active commands to incoming requests.
-		cmd.Lock()
+
 		select {
-		case cmd.ticket = <-circuit.executorPool.Tickets:
-			cmd.Unlock()
+		case t := <-circuit.executorPool.Tickets:
+			cmd.setTicket(t)
+
 		default:
-			cmd.Unlock()
-			cmd.errorWithFallback(ErrMaxConcurrency)
-			return
+			select {
+			case t := <-circuit.executorPool.WaitingTicket:
+				cmd.reportEvent("queued")
+				cmd.setOverflowTicket(t)
+			default: // Unable to get execution or waiting ticket, error with MaxConcurrency
+				cmd.errorWithFallback(ErrMaxConcurrency)
+				close(cmd.ticketChecked)
+				return
+			}
+
+			// Unable to execute the cmd but was able to get the waiting slot
+			select {
+			case executionTicket := <-circuit.executorPool.Tickets:
+				// return the ticket right away as it is not required
+				cmd.circuit.executorPool.ReturnWaitingTicket(cmd.overflowTicket)
+				cmd.setTicket(executionTicket)
+				isOpen := circuit.IsOpen()
+				if isOpen {
+					cmd.errorWithFallback(ErrCircuitOpen)
+					close(cmd.ticketChecked)
+					return
+				}
+			case <-cmd.timeoutChan:
+				// return the ticket right away as it is not required
+				cmd.circuit.executorPool.ReturnWaitingTicket(cmd.overflowTicket)
+				close(cmd.ticketChecked)
+				return
+			}
 		}
 
+		close(cmd.ticketChecked)
 		runStart := time.Now()
 		runErr := run()
 
 		if !cmd.isTimedOut() {
-			cmd.runDuration = time.Since(runStart)
+			cmd.setRunDuration(time.Since(runStart))
 
 			if runErr != nil {
 				cmd.errorWithFallback(runErr)
@@ -116,11 +151,13 @@ func Go(name string, run runFunc, fallback fallbackFunc) chan error {
 
 	go func() {
 		defer func() {
+			<-cmd.ticketChecked
 			cmd.Lock()
 			cmd.circuit.executorPool.Return(cmd.ticket)
+			copyEvents := append([]string(nil), cmd.events...)
 			cmd.Unlock()
 
-			err := cmd.circuit.ReportEvent(cmd.events, cmd.start, cmd.runDuration)
+			err := cmd.circuit.ReportEvent(copyEvents, cmd.start, cmd.getRunDuration())
 			if err != nil {
 				log.Print(err)
 			}
@@ -132,11 +169,17 @@ func Go(name string, run runFunc, fallback fallbackFunc) chan error {
 		select {
 		case <-cmd.finished:
 		case <-timer.C:
-			cmd.Lock()
-			cmd.timedOut = true
-			cmd.Unlock()
-
-			cmd.errorWithFallback(ErrTimeout)
+			close(cmd.timeoutChan)
+			// mark as timeout only if the reason is timeout, if the job was in overflowQueue mark it as MaxConcurrency
+			if cmd.getOverflowTicket() == nil {
+				cmd.Lock()
+				cmd.timedOut = true
+				cmd.Unlock()
+				cmd.errorWithFallback(ErrTimeout)
+			} else {
+				// even if the execution was waiting in queue and then timed-out while executing, mark it as ErrMaxConcurrency
+				cmd.errorWithFallback(ErrMaxConcurrency)
+			}
 			return
 		}
 	}()
@@ -192,8 +235,8 @@ func (c *command) reportEvent(eventType string) {
 }
 
 func (c *command) isTimedOut() bool {
-	c.Lock()
-	defer c.Unlock()
+	c.RLock()
+	defer c.RUnlock()
 
 	return c.timedOut
 }
@@ -235,4 +278,42 @@ func (c *command) tryFallback(err error) error {
 	c.reportEvent("fallback-success")
 
 	return nil
+}
+
+func (c *command) getTicket() *struct{} {
+	c.RLock()
+	defer c.RUnlock()
+
+	return c.ticket
+}
+func (c *command) setTicket(t *struct{}) {
+	c.Lock()
+	defer c.Unlock()
+
+	c.ticket = t
+}
+func (c *command) getOverflowTicket() *struct{} {
+	c.RLock()
+	defer c.RUnlock()
+
+	return c.overflowTicket
+}
+
+func (c *command) setOverflowTicket(t *struct{}) {
+	c.Lock()
+	defer c.Unlock()
+
+	c.overflowTicket = t
+}
+
+func (c *command) setRunDuration(duration time.Duration) {
+	c.Lock()
+	defer c.Unlock()
+	c.runDuration = duration
+}
+
+func (c *command) getRunDuration() time.Duration {
+	c.RLock()
+	defer c.RUnlock()
+	return c.runDuration
 }
