@@ -2,15 +2,18 @@ sudo: false
 language: go
 script:
   - cd hystrix
-  - go test -race
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
 go:
-  - 1.3.3
-  - 1.4.3
-  - 1.5.4
   - 1.6.0
-  - 1.6.1
-  - 1.6.2
+  - 1.7.0
+  - 1.8.0
+  - 1.9.0
   - tip
+  
 env:
   global:
     - GORACE="halt_on_error=1"
+    
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
