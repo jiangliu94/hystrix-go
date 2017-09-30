@@ -5,15 +5,14 @@ script:
   - go test -race -coverprofile=coverage.txt -covermode=atomic
 
 go:
-  - 1.6.0
-  - 1.7.0
-  - 1.8.0
-  - 1.9.0
+  - 1.6.x
+  - 1.7.x
+  - 1.8.x
   - tip
-  
+
 env:
   global:
     - GORACE="halt_on_error=1"
-    
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
