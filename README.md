@@ -3,6 +3,7 @@ hystrix-go
 
 [![Build Status](https://travis-ci.org/myteksi/hystrix-go.png?branch=master)](https://travis-ci.org/myteksi/hystrix-go)
 [![GoDoc Documentation](http://godoc.org/github.com/myteksi/hystrix-go/hystrix?status.png)](https://godoc.org/github.com/myteksi/hystrix-go/hystrix)
+[![codecov](https://codecov.io/gh/myteksi/hystrix-go/branch/master/graph/badge.svg)](https://codecov.io/gh/myteksi/hystrix-go)
 
 [Hystrix](https://github.com/Netflix/Hystrix) is a great project from Netflix. This repository is a fork of [original](https://godoc.org/github.com/afex/hystrix-go) repository, with some additional features.
 You may go through "Issues" for list of feature that will be added in future. 
