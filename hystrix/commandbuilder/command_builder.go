@@ -23,14 +23,13 @@ type CommandBuilder struct {
 // New Create new command
 func New(commandName string) *CommandBuilder {
 	return &CommandBuilder{
-		commandName:                 commandName,
-		timeout:                     hystrix.DefaultTimeout,
-		commandGroup:                commandName,
-		maxConcurrentRequests:       hystrix.DefaultMaxConcurrent,
-		requestVolumeThreshold:      hystrix.DefaultVolumeThreshold,
-		queueSizeRejectionThreshold: &hystrix.DefaultQueueSizeRejectionThreshold,
-		sleepWindow:                 hystrix.DefaultSleepWindow,
-		errorPercentThreshold:       hystrix.DefaultErrorPercentThreshold,
+		commandName:            commandName,
+		timeout:                hystrix.DefaultTimeout,
+		commandGroup:           commandName,
+		maxConcurrentRequests:  hystrix.DefaultMaxConcurrent,
+		requestVolumeThreshold: hystrix.DefaultVolumeThreshold,
+		sleepWindow:            hystrix.DefaultSleepWindow,
+		errorPercentThreshold:  hystrix.DefaultErrorPercentThreshold,
 	}
 }
 
@@ -47,8 +46,13 @@ func (cb *CommandBuilder) WithCommandGroup(commandGroup string) *CommandBuilder 
 }
 
 // WithMaxConcurrentRequests modify max concurrent requests
+// if not already set, this will also set the queue size as 5 times the max concurrent requests
 func (cb *CommandBuilder) WithMaxConcurrentRequests(maxConcurrentRequests int) *CommandBuilder {
 	cb.maxConcurrentRequests = maxConcurrentRequests
+	if cb.queueSizeRejectionThreshold == nil {
+		queueSize := 5 * cb.maxConcurrentRequests
+		cb.queueSizeRejectionThreshold = &queueSize
+	}
 	return cb
 }
 
@@ -82,6 +86,9 @@ func (cb *CommandBuilder) WithQueueSize(queueSize int) *CommandBuilder {
 
 // Build the command setting, Use hystrix.Initialize for setup
 func (cb *CommandBuilder) Build() *hystrix.Settings {
+	if cb.queueSizeRejectionThreshold == nil {
+		cb.queueSizeRejectionThreshold = &hystrix.DefaultQueueSizeRejectionThreshold
+	}
 	return &hystrix.Settings{
 		CommandName:                 cb.commandName,
 		QueueSizeRejectionThreshold: *cb.queueSizeRejectionThreshold,

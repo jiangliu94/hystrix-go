@@ -26,12 +26,13 @@ func TestCommandBuilderDefaults(t *testing.T) {
 
 func TestCommandBuilderWithCommandGroup(t *testing.T) {
 	Convey("given a command configured for a default queue", t, func() {
-		commandSetting := New("command2").WithCommandGroup("service1").Build()
+		commandSetting := New("command2").WithMaxConcurrentRequests(41).WithCommandGroup("service1").Build()
 		hystrix.Initialize(commandSetting)
 
 		Convey("reading the timeout should be the same", func() {
 			circuits := hystrix.GetCircuitSettings()
-			So(circuits["command2"].QueueSizeRejectionThreshold, ShouldEqual, hystrix.DefaultQueueSizeRejectionThreshold)
+			So(circuits["command2"].MaxConcurrentRequests, ShouldEqual, 41)
+			So(circuits["command2"].QueueSizeRejectionThreshold, ShouldEqual, 41*5)
 			So(circuits["command2"].CommandGroup, ShouldEqual, "service1")
 			So(circuits["command2"].ErrorPercentThreshold, ShouldEqual, hystrix.DefaultErrorPercentThreshold)
 			So(circuits["command2"].Timeout.Nanoseconds()/1000000, ShouldEqual, hystrix.DefaultTimeout)
