@@ -35,12 +35,18 @@ func New(commandName string) *CommandBuilder {
 
 // WithTimeout modify timeout
 func (cb *CommandBuilder) WithTimeout(timeoutInMs int) *CommandBuilder {
+	if timeoutInMs == 0 {
+		timeoutInMs = hystrix.DefaultTimeout
+	}
 	cb.timeout = timeoutInMs
 	return cb
 }
 
 // WithCommandGroup modify commandGroup
 func (cb *CommandBuilder) WithCommandGroup(commandGroup string) *CommandBuilder {
+	if commandGroup == "" {
+		commandGroup = cb.commandName
+	}
 	cb.commandGroup = commandGroup
 	return cb
 }
@@ -48,6 +54,9 @@ func (cb *CommandBuilder) WithCommandGroup(commandGroup string) *CommandBuilder 
 // WithMaxConcurrentRequests modify max concurrent requests
 // if not already set, this will also set the queue size as 5 times the max concurrent requests
 func (cb *CommandBuilder) WithMaxConcurrentRequests(maxConcurrentRequests int) *CommandBuilder {
+	if maxConcurrentRequests == 0 {
+		maxConcurrentRequests = hystrix.DefaultMaxConcurrent
+	}
 	cb.maxConcurrentRequests = maxConcurrentRequests
 	if cb.queueSizeRejectionThreshold == nil {
 		queueSize := 5 * cb.maxConcurrentRequests
@@ -58,18 +67,27 @@ func (cb *CommandBuilder) WithMaxConcurrentRequests(maxConcurrentRequests int) *
 
 // WithRequestVolumeThreshold modify request volume threshold
 func (cb *CommandBuilder) WithRequestVolumeThreshold(requestVolThreshold int) *CommandBuilder {
+	if requestVolThreshold == 0 {
+		requestVolThreshold = hystrix.DefaultVolumeThreshold
+	}
 	cb.requestVolumeThreshold = requestVolThreshold
 	return cb
 }
 
 // WithSleepWindow modify sleep window
 func (cb *CommandBuilder) WithSleepWindow(sleepWindow int) *CommandBuilder {
+	if sleepWindow == 0 {
+		sleepWindow = hystrix.DefaultSleepWindow
+	}
 	cb.sleepWindow = sleepWindow
 	return cb
 }
 
 // WithErrorPercentageThreshold modify error percentage threshold
 func (cb *CommandBuilder) WithErrorPercentageThreshold(errPercentThreshold int) *CommandBuilder {
+	if errPercentThreshold == 0 {
+		errPercentThreshold = hystrix.DefaultErrorPercentThreshold
+	}
 	cb.errorPercentThreshold = errPercentThreshold
 	return cb
 }

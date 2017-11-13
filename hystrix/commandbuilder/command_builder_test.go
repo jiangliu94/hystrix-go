@@ -24,6 +24,21 @@ func TestCommandBuilderDefaults(t *testing.T) {
 	})
 }
 
+func TestCommandBuilderInvalidInput(t *testing.T) {
+	Convey("given a command configured for a default queue", t, func() {
+		commandSetting := New("command1").WithErrorPercentageThreshold(0).WithSleepWindow(0).Build()
+		hystrix.Initialize(commandSetting)
+
+		Convey("reading the timeout should be the same", func() {
+			circuits := hystrix.GetCircuitSettings()
+			So(circuits["command1"].QueueSizeRejectionThreshold, ShouldEqual, hystrix.DefaultQueueSizeRejectionThreshold)
+			So(circuits["command1"].ErrorPercentThreshold, ShouldEqual, hystrix.DefaultErrorPercentThreshold)
+			So(circuits["command1"].Timeout.Nanoseconds()/1000000, ShouldEqual, hystrix.DefaultTimeout)
+			So(circuits["command1"].SleepWindow.Nanoseconds()/1000000, ShouldEqual, hystrix.DefaultSleepWindow)
+		})
+	})
+}
+
 func TestCommandBuilderWithCommandGroup(t *testing.T) {
 	Convey("given a command configured for a default queue", t, func() {
 		commandSetting := New("command2").WithMaxConcurrentRequests(41).WithCommandGroup("service1").Build()
