@@ -83,9 +83,9 @@ func InitializeStatsdCollector(config *StatsdCollectorConfig) (*StatsdCollectorC
 }
 
 // NewStatsdCollector creates a collector for a specific circuit. The
-// prefix given to this circuit will be {config.Prefix}.{circuit_name}.{metric}.
+// prefix given to this circuit will be {config.Prefix}.{command_group}.{circuit_name}.{metric}.
 // Circuits with "/" in their names will have them replaced with ".".
-func (s *StatsdCollectorClient) NewStatsdCollector(name string) metricCollector.MetricCollector {
+func (s *StatsdCollectorClient) NewStatsdCollector(name string, commandGroup string) metricCollector.MetricCollector {
 	if s.client == nil {
 		log.Fatalf("Statsd client must be initialized before circuits are created.")
 	}
@@ -94,19 +94,19 @@ func (s *StatsdCollectorClient) NewStatsdCollector(name string) metricCollector.
 	name = strings.Replace(name, ".", "-", -1)
 	return &StatsdCollector{
 		client:                  s.client,
-		circuitOpenPrefix:       name + ".circuitOpen",
-		attemptsPrefix:          name + ".attempts",
-		errorsPrefix:            name + ".errors",
-		queueSizePrefix:         name + ".queueLength",
-		successesPrefix:         name + ".successes",
-		failuresPrefix:          name + ".failures",
-		rejectsPrefix:           name + ".rejects",
-		shortCircuitsPrefix:     name + ".shortCircuits",
-		timeoutsPrefix:          name + ".timeouts",
-		fallbackSuccessesPrefix: name + ".fallbackSuccesses",
-		fallbackFailuresPrefix:  name + ".fallbackFailures",
-		totalDurationPrefix:     name + ".totalDuration",
-		runDurationPrefix:       name + ".runDuration",
+		circuitOpenPrefix:       commandGroup + "." + name + ".circuitOpen",
+		attemptsPrefix:          commandGroup + "." + name + ".attempts",
+		errorsPrefix:            commandGroup + "." + name + ".errors",
+		queueSizePrefix:         commandGroup + "." + name + ".queueLength",
+		successesPrefix:         commandGroup + "." + name + ".successes",
+		failuresPrefix:          commandGroup + "." + name + ".failures",
+		rejectsPrefix:           commandGroup + "." + name + ".rejects",
+		shortCircuitsPrefix:     commandGroup + "." + name + ".shortCircuits",
+		timeoutsPrefix:          commandGroup + "." + name + ".timeouts",
+		fallbackSuccessesPrefix: commandGroup + "." + name + ".fallbackSuccesses",
+		fallbackFailuresPrefix:  commandGroup + "." + name + ".fallbackFailures",
+		totalDurationPrefix:     commandGroup + "." + name + ".totalDuration",
+		runDurationPrefix:       commandGroup + "." + name + ".runDuration",
 		sampleRate:              s.sampleRate,
 	}
 }

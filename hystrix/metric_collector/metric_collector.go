@@ -9,30 +9,30 @@ import (
 // collect statistics about the health of the circuit.
 var Registry = metricCollectorRegistry{
 	lock: &sync.RWMutex{},
-	registry: []func(name string) MetricCollector{
+	registry: []func(name string, commandGroup string) MetricCollector{
 		newDefaultMetricCollector,
 	},
 }
 
 type metricCollectorRegistry struct {
 	lock     *sync.RWMutex
-	registry []func(name string) MetricCollector
+	registry []func(name string, commandGroup string) MetricCollector
 }
 
 // InitializeMetricCollectors runs the registried MetricCollector Initializers to create an array of MetricCollectors.
-func (m *metricCollectorRegistry) InitializeMetricCollectors(name string) []MetricCollector {
+func (m *metricCollectorRegistry) InitializeMetricCollectors(name string, commandGroup string) []MetricCollector {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
 	metrics := make([]MetricCollector, len(m.registry))
 	for i, metricCollectorInitializer := range m.registry {
-		metrics[i] = metricCollectorInitializer(name)
+		metrics[i] = metricCollectorInitializer(name, commandGroup)
 	}
 	return metrics
 }
 
 // Register places a MetricCollector Initializer in the registry maintained by this metricCollectorRegistry.
-func (m *metricCollectorRegistry) Register(initMetricCollector func(string) MetricCollector) {
+func (m *metricCollectorRegistry) Register(initMetricCollector func(string, string) MetricCollector) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 

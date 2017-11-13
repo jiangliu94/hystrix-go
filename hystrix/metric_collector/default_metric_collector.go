@@ -32,7 +32,7 @@ type DefaultMetricCollector struct {
 	runDuration       *rolling.Timing
 }
 
-func newDefaultMetricCollector(name string) MetricCollector {
+func newDefaultMetricCollector(name string, commandGroup string) MetricCollector {
 	m := &DefaultMetricCollector{}
 	m.mutex = &sync.RWMutex{}
 	m.Reset()

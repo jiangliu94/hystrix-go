@@ -15,7 +15,7 @@ func TestSampleRate(t *testing.T) {
 			})
 			So(err, ShouldBeNil)
 
-			collector := client.NewStatsdCollector("foo").(*StatsdCollector)
+			collector := client.NewStatsdCollector("foo", "group1").(*StatsdCollector)
 			Convey("it defaults to no sampling", func() {
 				So(collector.sampleRate, ShouldEqual, 1.0)
 			})
@@ -28,7 +28,7 @@ func TestSampleRate(t *testing.T) {
 			})
 			So(err, ShouldBeNil)
 
-			collector := client.NewStatsdCollector("foo").(*StatsdCollector)
+			collector := client.NewStatsdCollector("foo", "group2").(*StatsdCollector)
 			Convey("the rate is set", func() {
 				So(collector.sampleRate, ShouldEqual, 0.5)
 			})

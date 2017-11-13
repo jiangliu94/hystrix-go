@@ -22,13 +22,13 @@ type metricExchange struct {
 	metricCollectors []metricCollector.MetricCollector
 }
 
-func newMetricExchange(name string) *metricExchange {
+func newMetricExchange(name string, commandGroup string) *metricExchange {
 	m := &metricExchange{}
 	m.Name = name
 
 	m.Updates = make(chan *commandExecution, 2000)
 	m.Mutex = &sync.RWMutex{}
-	m.metricCollectors = metricCollector.Registry.InitializeMetricCollectors(name)
+	m.metricCollectors = metricCollector.Registry.InitializeMetricCollectors(name, commandGroup)
 	m.Reset()
 
 	go m.Monitor()

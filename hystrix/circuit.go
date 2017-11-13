@@ -70,8 +70,9 @@ func Flush() {
 func newCircuitBreaker(name string) *CircuitBreaker {
 	c := &CircuitBreaker{}
 	c.Name = name
-	c.CommandGroup = getSettings(name).CommandGroup
-	c.metrics = newMetricExchange(name)
+	commandGroup := getSettings(name).CommandGroup
+	c.CommandGroup = commandGroup
+	c.metrics = newMetricExchange(name, commandGroup)
 	c.executorPool = newBufferedExecutorPool(name)
 	c.mutex = &sync.RWMutex{}
 
