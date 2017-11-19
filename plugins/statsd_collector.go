@@ -89,9 +89,9 @@ func (s *StatsdCollectorClient) NewStatsdCollector(name string, commandGroup str
 	if s.client == nil {
 		log.Fatalf("Statsd client must be initialized before circuits are created.")
 	}
-	name = strings.Replace(name, "/", "-", -1)
-	name = strings.Replace(name, ":", "-", -1)
-	name = strings.Replace(name, ".", "-", -1)
+	name = formatStatsdString(name)
+	commandGroup = formatStatsdString(commandGroup)
+
 	return &StatsdCollector{
 		client:                  s.client,
 		circuitOpenPrefix:       commandGroup + "." + name + ".circuitOpen",
@@ -109,6 +109,13 @@ func (s *StatsdCollectorClient) NewStatsdCollector(name string, commandGroup str
 		runDurationPrefix:       commandGroup + "." + name + ".runDuration",
 		sampleRate:              s.sampleRate,
 	}
+}
+
+func formatStatsdString(name string) string {
+	name = strings.Replace(name, "/", "-", -1)
+	name = strings.Replace(name, ":", "-", -1)
+	name = strings.Replace(name, ".", "-", -1)
+	return name
 }
 
 func (g *StatsdCollector) setGauge(prefix string, value int64) {
