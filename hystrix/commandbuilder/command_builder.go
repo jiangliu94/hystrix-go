@@ -11,13 +11,15 @@ import (
 type CommandBuilder struct {
 	commandName            string
 	timeout                int
-	commandGroup           string
 	maxConcurrentRequests  int
 	requestVolumeThreshold int
 	sleepWindow            int
 	errorPercentThreshold  int
 	// for more details refer - https://github.com/Netflix/Hystrix/wiki/Configuration#maxqueuesize
 	queueSizeRejectionThreshold *int
+	// group a number of command (circuit name) together, useful for defining ownership/alerts/monitoring
+	// ref: https://github.com/Netflix/Hystrix/wiki/How-To-Use#command-group
+	commandGroup string
 }
 
 // New Create new command
