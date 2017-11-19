@@ -3,7 +3,11 @@ package plugins
 import (
 	"testing"
 
+	"sync/atomic"
+
+	"github.com/myteksi/hystrix-go/plugins/mocks"
 	. "github.com/smartystreets/goconvey/convey"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestSampleRate(t *testing.T) {
@@ -34,4 +38,40 @@ func TestSampleRate(t *testing.T) {
 			})
 		})
 	})
+}
+
+func TestCommandGroup(t *testing.T) {
+	mockStatsd1 := &mocks.Statter{}
+	mockStatsd2 := &mocks.Statter{}
+	testStatsdCollector1 := &StatsdCollectorClient{}
+	testStatsdCollector2 := &StatsdCollectorClient{}
+	testStatsdCollector1.client = mockStatsd1
+	testStatsdCollector2.client = mockStatsd2
+	metricCollector1 := testStatsdCollector1.NewStatsdCollector("commandName1", "commandGroup1")
+	metricCollector2 := testStatsdCollector2.NewStatsdCollector("commandName2", "commandGroup2")
+	queueLength1 := int32(0)
+	attempt1 := int32(0)
+	queueLength2 := int32(0)
+
+	mockStatsd1.On("Inc", "commandGroup1.commandName1.queueLength", int64(1), mock.Anything).Run(func(args mock.Arguments) {
+		atomic.AddInt32(&queueLength1, 1)
+	}).Return(nil)
+	mockStatsd1.On("Inc", "commandGroup1.commandName1.attempts", int64(1), mock.Anything).Run(func(args mock.Arguments) {
+		atomic.AddInt32(&attempt1, 1)
+	}).Return(nil)
+	mockStatsd2.On("Inc", "commandGroup2.commandName2.queueLength", int64(1), mock.Anything).Run(func(args mock.Arguments) {
+		atomic.AddInt32(&queueLength2, 1)
+	}).Return(nil)
+
+	Convey("increment queue size", t, func() {
+		metricCollector1.IncrementAttempts()
+		metricCollector1.IncrementAttempts()
+		metricCollector1.IncrementQueueSize()
+		metricCollector2.IncrementQueueSize()
+
+		So(2, ShouldEqual, attempt1)
+		So(1, ShouldEqual, queueLength1)
+		So(1, ShouldEqual, queueLength2)
+	})
+
 }
