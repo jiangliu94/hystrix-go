@@ -9,10 +9,12 @@ import (
 
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
 	"github.com/rcrowley/go-metrics"
+	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 var makeTimerFunc = func() interface{} { return metrics.NewTimer() }
 var makeCounterFunc = func() interface{} { return metrics.NewCounter() }
+var makeGaugeFunc = func() interface{} { return metrics.NewGaugeFloat64() }
 
 // GraphiteCollector fulfills the metricCollector interface allowing users to ship circuit
 // stats to a graphite backend. To use users must call InitializeGraphiteCollector before
@@ -33,6 +35,7 @@ type GraphiteCollector struct {
 	fallbackFailuresPrefix  string
 	totalDurationPrefix     string
 	runDurationPrefix       string
+	runDurationDerivativePrefix string
 }
 
 // GraphiteCollectorConfig provides configuration that the graphite client will need.
@@ -71,6 +74,7 @@ func NewGraphiteCollector(name string, commandGroup string) metricCollector.Metr
 		fallbackFailuresPrefix:  commandGroup + "." + name + ".fallbackFailures",
 		totalDurationPrefix:     commandGroup + "." + name + ".totalDuration",
 		runDurationPrefix:       commandGroup + "." + name + ".runDuration",
+		runDurationDerivativePrefix: commandGroup + "." + name + ".runDurationDerivative",
 	}
 }
 
@@ -88,6 +92,14 @@ func (g *GraphiteCollector) updateTimerMetric(prefix string, dur time.Duration) 
 		return
 	}
 	c.Update(dur)
+}
+
+func (g *GraphiteCollector) updateGaugeMetric(prefix string, value float64) {
+	c, ok := metrics.GetOrRegister(prefix, makeGaugeFunc).(metrics.GaugeFloat64)
+	if !ok {
+		return
+	}
+	c.Update(value)
 }
 
 // IncrementAttempts increments the number of calls to this circuit.
@@ -164,6 +176,10 @@ func (g *GraphiteCollector) UpdateTotalDuration(timeSinceStart time.Duration) {
 // This registers as a timer in the graphite collector.
 func (g *GraphiteCollector) UpdateRunDuration(runDuration time.Duration) {
 	g.updateTimerMetric(g.runDurationPrefix, runDuration)
+}
+
+func (g *GraphiteCollector) UpdateRunDurationDerivative(derivative float64) {
+	g.updateGaugeMetric(g.runDurationDerivativePrefix, derivative)
 }
 
 // Reset is a noop operation in this collector.

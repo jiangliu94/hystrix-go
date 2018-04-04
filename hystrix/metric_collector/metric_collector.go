@@ -69,6 +69,8 @@ type MetricCollector interface {
 	UpdateTotalDuration(timeSinceStart time.Duration)
 	// UpdateRunDuration updates the internal counter of how long the last run took.
 	UpdateRunDuration(runDuration time.Duration)
+	// UpdateRunDuration updates the internal counter of how fast the execution latency changes
+	UpdateRunDurationDerivative(derivative float64)
 	// Reset resets the internal counters and timers.
 	Reset()
 }

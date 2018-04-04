@@ -7,6 +7,7 @@ import (
 
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
+	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 // StatsdCollector fulfills the metricCollector interface allowing users to ship circuit
@@ -29,6 +30,7 @@ type StatsdCollector struct {
 	fallbackFailuresPrefix  string
 	totalDurationPrefix     string
 	runDurationPrefix       string
+	runDurationDerivativePrefix string
 	sampleRate              float32
 }
 
@@ -107,6 +109,7 @@ func (s *StatsdCollectorClient) NewStatsdCollector(name string, commandGroup str
 		fallbackFailuresPrefix:  commandGroup + "." + name + ".fallbackFailures",
 		totalDurationPrefix:     commandGroup + "." + name + ".totalDuration",
 		runDurationPrefix:       commandGroup + "." + name + ".runDuration",
+		runDurationDerivativePrefix: commandGroup + "." + name + ".runDurationDerivative",
 		sampleRate:              s.sampleRate,
 	}
 }
@@ -215,6 +218,10 @@ func (g *StatsdCollector) UpdateTotalDuration(timeSinceStart time.Duration) {
 // This registers as a timer in the Statsd collector.
 func (g *StatsdCollector) UpdateRunDuration(runDuration time.Duration) {
 	g.updateTimerMetric(g.runDurationPrefix, runDuration)
+}
+
+func (g *StatsdCollector) UpdateRunDurationDerivative(derivative float64) {
+	g.setGauge(g.runDurationDerivativePrefix, int64(derivative))
 }
 
 // Reset is a noop operation in this collector.

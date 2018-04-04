@@ -146,3 +146,38 @@ func (r *Timing) Mean() uint32 {
 
 	return uint32(sum.Nanoseconds()/length) / 1000000
 }
+
+func (r *Timing) Derivative(interval int64) float64 {
+	if interval <= 0 {
+		return 0
+	}
+	var lowerLimit, upperLimit int64
+	var lowerSum, upperSum int64
+	isLowerLimit := true
+
+	r.Mutex.RLock()
+	defer r.Mutex.RUnlock()
+
+	for timestamp := range r.Buckets {
+		if timestamp >= time.Now().Unix() - interval {
+			if isLowerLimit {
+				lowerLimit = timestamp
+				isLowerLimit = false
+
+			}
+			if timestamp > upperLimit {
+				upperLimit = timestamp
+			}
+		}
+	}
+	for _, duration := range r.Buckets[lowerLimit].Durations {
+		lowerSum += duration.Nanoseconds()
+	}
+	lowerMean := float64(lowerSum)/ float64(len(r.Buckets[lowerLimit].Durations))
+	for _, duration := range r.Buckets[upperLimit].Durations {
+		upperSum += duration.Nanoseconds()
+	}
+	upperMean := float64(upperSum)/ float64(len(r.Buckets[upperLimit].Durations))
+
+	return float64(upperMean - lowerMean) / float64(interval) / 1000000
+}

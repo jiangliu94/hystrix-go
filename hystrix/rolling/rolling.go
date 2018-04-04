@@ -107,6 +107,32 @@ func (r *Number) Max(now time.Time) float64 {
 	return max
 }
 
+// Derivative returns the derivative within a given internal from now
+func (r *Number) Derivative(now time.Time, interval int64) float64 {
+	if interval <= 0 {
+		return 0
+	}
+	var lowerLimit, upperLimit int64
+	isLowerLimit := true
+
+	r.Mutex.RLock()
+	defer r.Mutex.RUnlock()
+
+	for timestamp := range r.Buckets {
+		if timestamp >= now.Unix()- interval {
+			if isLowerLimit {
+				lowerLimit = timestamp
+				isLowerLimit = false
+
+			}
+			if timestamp > upperLimit {
+				upperLimit = timestamp
+			}
+		}
+	}
+	return float64(r.Buckets[upperLimit].Value-r.Buckets[lowerLimit].Value) / float64(interval)
+}
+
 // Avg return the average value seen in the last 10 seconds.
 func (r *Number) Avg(now time.Time) float64 {
 	return r.Sum(now) / 10

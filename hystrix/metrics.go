@@ -111,6 +111,7 @@ func (m *metricExchange) IncrementMetrics(wg *sync.WaitGroup, collector metricCo
 
 	collector.UpdateTotalDuration(totalDuration)
 	collector.UpdateRunDuration(update.RunDuration)
+	collector.UpdateRunDurationDerivative(m.latencyDerivative())
 
 	wg.Done()
 }
@@ -132,6 +133,10 @@ func (m *metricExchange) Requests() *rolling.Number {
 
 func (m *metricExchange) requestsLocked() *rolling.Number {
 	return m.DefaultCollector().NumRequests()
+}
+
+func (m *metricExchange) latencyDerivative() float64 {
+	return m.DefaultCollector().RunDurationDerivative()
 }
 
 func (m *metricExchange) ErrorPercent(now time.Time) int {

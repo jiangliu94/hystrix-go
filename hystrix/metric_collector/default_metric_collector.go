@@ -131,6 +131,13 @@ func (d *DefaultMetricCollector) RunDuration() *rolling.Timing {
 	return d.runDuration
 }
 
+// RunDurationDerivative returns the derivative of the circuit request latency in the latest 1 second
+func (d *DefaultMetricCollector) RunDurationDerivative() float64 {
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
+	return d.runDuration.Derivative(1)
+}
+
 // IncrementAttempts increments the number of requests seen in the latest time bucket.
 func (d *DefaultMetricCollector) IncrementAttempts() {
 	d.mutex.RLock()
@@ -214,6 +221,11 @@ func (d *DefaultMetricCollector) UpdateRunDuration(runDuration time.Duration) {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
 	d.runDuration.Add(runDuration)
+}
+
+// UpdateRunDurationDerivative updates the derivative of request execution latency
+func (d *DefaultMetricCollector) UpdateRunDurationDerivative(derivative float64) {
+	// Do nothing
 }
 
 // Reset resets all metrics in this collector to 0.

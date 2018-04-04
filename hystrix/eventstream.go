@@ -103,6 +103,7 @@ func (sh *StreamHandler) publishMetrics(cb *CircuitBreaker) error {
 		LatencyTotalMean:   cb.metrics.DefaultCollector().TotalDuration().Mean(),
 		LatencyExecute:     generateLatencyTimings(cb.metrics.DefaultCollector().RunDuration()),
 		LatencyExecuteMean: cb.metrics.DefaultCollector().RunDuration().Mean(),
+		LatencyDerivative:  cb.metrics.DefaultCollector().RunDurationDerivative(),
 
 		streamCmdHealthMetric: streamCmdHealthMetric{
 			RequestCount:       uint32(reqCount),
@@ -254,6 +255,7 @@ type streamCmdMetric struct {
 	LatencyExecute                  streamCmdLatency `json:"latencyExecute"`
 	LatencyTotalMean                uint32           `json:"latencyTotal_mean"`
 	LatencyTotal                    streamCmdLatency `json:"latencyTotal"`
+	LatencyDerivative				float64			 `json:"latencyDerivative"`
 }
 
 type streamCmdHealthMetric struct {

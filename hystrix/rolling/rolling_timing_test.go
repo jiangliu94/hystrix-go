@@ -68,3 +68,25 @@ func TestOrdinal(t *testing.T) {
 		})
 	})
 }
+
+func TestTimingDerivative(t *testing.T) {
+	Convey("given a new rolling timing", t, func() {
+
+		r := NewTiming()
+
+		Convey("Derivative() should be 0", func() {
+			So(r.Derivative(1), ShouldEqual, 0)
+		})
+
+		Convey("after adding multiple timings", func() {
+			r.Add(100 * time.Millisecond)
+			r.Add(900 * time.Millisecond)
+			time.Sleep(2 * time.Second)
+			r.Add(1400 * time.Millisecond)
+
+			Convey("the derivative should be 300", func() {
+				So(r.Derivative(3), ShouldEqual, 300)
+			})
+		})
+	})
+}

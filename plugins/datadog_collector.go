@@ -6,6 +6,7 @@ import (
 	// Developed on https://github.com/DataDog/datadog-go/tree/a27810dd518c69be741a7fd5d0e39f674f615be8
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
+	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 // These metrics are constants because we're leveraging the Datadog tagging
@@ -28,6 +29,7 @@ const (
 	dmFallbackFailures  = "hystrix.fallbackFailures"
 	dmTotalDuration     = "hystrix.totalDuration"
 	dmRunDuration       = "hystrix.runDuration"
+	dmRunDurationDerivative = "hystrix.runDurationDerivative"
 )
 
 type (
@@ -189,6 +191,11 @@ func (dc *DatadogCollector) UpdateTotalDuration(timeSinceStart time.Duration) {
 func (dc *DatadogCollector) UpdateRunDuration(runDuration time.Duration) {
 	ms := float64(runDuration.Nanoseconds() / 1000000)
 	_ = dc.client.TimeInMilliseconds(dmRunDuration, ms, dc.tags, 1.0)
+}
+
+// UpdateRunDurationDerivative updates the derivative of request execution latency
+func (dc *DatadogCollector) UpdateRunDurationDerivative(derivative float64) {
+	_ = dc.client.Gauge(dmRunDurationDerivative, derivative, dc.tags, 1.0)
 }
 
 // Reset is a noop operation in this collector.
