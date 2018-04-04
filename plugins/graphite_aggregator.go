@@ -9,7 +9,6 @@ import (
 
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
 	"github.com/rcrowley/go-metrics"
-	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 var makeTimerFunc = func() interface{} { return metrics.NewTimer() }
@@ -23,18 +22,18 @@ var makeGaugeFunc = func() interface{} { return metrics.NewGaugeFloat64() }
 // This Collector uses github.com/rcrowley/go-metrics for aggregation. See that repo for more details
 // on how metrics are aggregated and expressed in graphite.
 type GraphiteCollector struct {
-	attemptsPrefix          string
-	queueSizePrefix         string
-	errorsPrefix            string
-	successesPrefix         string
-	failuresPrefix          string
-	rejectsPrefix           string
-	shortCircuitsPrefix     string
-	timeoutsPrefix          string
-	fallbackSuccessesPrefix string
-	fallbackFailuresPrefix  string
-	totalDurationPrefix     string
-	runDurationPrefix       string
+	attemptsPrefix              string
+	queueSizePrefix             string
+	errorsPrefix                string
+	successesPrefix             string
+	failuresPrefix              string
+	rejectsPrefix               string
+	shortCircuitsPrefix         string
+	timeoutsPrefix              string
+	fallbackSuccessesPrefix     string
+	fallbackFailuresPrefix      string
+	totalDurationPrefix         string
+	runDurationPrefix           string
 	runDurationDerivativePrefix string
 }
 
@@ -62,18 +61,18 @@ func NewGraphiteCollector(name string, commandGroup string) metricCollector.Metr
 	name = strings.Replace(name, ":", "-", -1)
 	name = strings.Replace(name, ".", "-", -1)
 	return &GraphiteCollector{
-		attemptsPrefix:          commandGroup + "." + name + ".attempts",
-		errorsPrefix:            commandGroup + "." + name + ".errors",
-		queueSizePrefix:         commandGroup + "." + name + ".queueLength",
-		successesPrefix:         commandGroup + "." + name + ".successes",
-		failuresPrefix:          commandGroup + "." + name + ".failures",
-		rejectsPrefix:           commandGroup + "." + name + ".rejects",
-		shortCircuitsPrefix:     commandGroup + "." + name + ".shortCircuits",
-		timeoutsPrefix:          commandGroup + "." + name + ".timeouts",
-		fallbackSuccessesPrefix: commandGroup + "." + name + ".fallbackSuccesses",
-		fallbackFailuresPrefix:  commandGroup + "." + name + ".fallbackFailures",
-		totalDurationPrefix:     commandGroup + "." + name + ".totalDuration",
-		runDurationPrefix:       commandGroup + "." + name + ".runDuration",
+		attemptsPrefix:              commandGroup + "." + name + ".attempts",
+		errorsPrefix:                commandGroup + "." + name + ".errors",
+		queueSizePrefix:             commandGroup + "." + name + ".queueLength",
+		successesPrefix:             commandGroup + "." + name + ".successes",
+		failuresPrefix:              commandGroup + "." + name + ".failures",
+		rejectsPrefix:               commandGroup + "." + name + ".rejects",
+		shortCircuitsPrefix:         commandGroup + "." + name + ".shortCircuits",
+		timeoutsPrefix:              commandGroup + "." + name + ".timeouts",
+		fallbackSuccessesPrefix:     commandGroup + "." + name + ".fallbackSuccesses",
+		fallbackFailuresPrefix:      commandGroup + "." + name + ".fallbackFailures",
+		totalDurationPrefix:         commandGroup + "." + name + ".totalDuration",
+		runDurationPrefix:           commandGroup + "." + name + ".runDuration",
 		runDurationDerivativePrefix: commandGroup + "." + name + ".runDurationDerivative",
 	}
 }

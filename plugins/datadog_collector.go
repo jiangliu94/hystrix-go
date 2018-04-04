@@ -6,7 +6,6 @@ import (
 	// Developed on https://github.com/DataDog/datadog-go/tree/a27810dd518c69be741a7fd5d0e39f674f615be8
 	"github.com/DataDog/datadog-go/statsd"
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
-	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 // These metrics are constants because we're leveraging the Datadog tagging
@@ -16,19 +15,19 @@ import (
 // own implemenation of DatadogClient
 const (
 	// DM = Datadog Metric
-	dmCircuitOpen       = "hystrix.circuitOpen"
-	dmAttempts          = "hystrix.attempts"
-	dmQueueLength       = "hystrix.queueLength"
-	dmErrors            = "hystrix.errors"
-	dmSuccesses         = "hystrix.successes"
-	dmFailures          = "hystrix.failures"
-	dmRejects           = "hystrix.rejects"
-	dmShortCircuits     = "hystrix.shortCircuits"
-	dmTimeouts          = "hystrix.timeouts"
-	dmFallbackSuccesses = "hystrix.fallbackSuccesses"
-	dmFallbackFailures  = "hystrix.fallbackFailures"
-	dmTotalDuration     = "hystrix.totalDuration"
-	dmRunDuration       = "hystrix.runDuration"
+	dmCircuitOpen           = "hystrix.circuitOpen"
+	dmAttempts              = "hystrix.attempts"
+	dmQueueLength           = "hystrix.queueLength"
+	dmErrors                = "hystrix.errors"
+	dmSuccesses             = "hystrix.successes"
+	dmFailures              = "hystrix.failures"
+	dmRejects               = "hystrix.rejects"
+	dmShortCircuits         = "hystrix.shortCircuits"
+	dmTimeouts              = "hystrix.timeouts"
+	dmFallbackSuccesses     = "hystrix.fallbackSuccesses"
+	dmFallbackFailures      = "hystrix.fallbackFailures"
+	dmTotalDuration         = "hystrix.totalDuration"
+	dmRunDuration           = "hystrix.runDuration"
 	dmRunDurationDerivative = "hystrix.runDurationDerivative"
 )
 

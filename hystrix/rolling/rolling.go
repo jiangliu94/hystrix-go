@@ -119,7 +119,7 @@ func (r *Number) Derivative(now time.Time, interval int64) float64 {
 	defer r.Mutex.RUnlock()
 
 	for timestamp := range r.Buckets {
-		if timestamp >= now.Unix()- interval {
+		if timestamp >= now.Unix()-interval {
 			if isLowerLimit {
 				lowerLimit = timestamp
 				isLowerLimit = false

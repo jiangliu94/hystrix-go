@@ -255,7 +255,7 @@ type streamCmdMetric struct {
 	LatencyExecute                  streamCmdLatency `json:"latencyExecute"`
 	LatencyTotalMean                uint32           `json:"latencyTotal_mean"`
 	LatencyTotal                    streamCmdLatency `json:"latencyTotal"`
-	LatencyDerivative				float64			 `json:"latencyDerivative"`
+	LatencyDerivative               float64          `json:"latencyDerivative"`
 }
 
 type streamCmdHealthMetric struct {

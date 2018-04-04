@@ -7,7 +7,6 @@ import (
 
 	"github.com/cactus/go-statsd-client/statsd"
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
-	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 // StatsdCollector fulfills the metricCollector interface allowing users to ship circuit
@@ -16,22 +15,22 @@ import (
 //
 // This Collector uses https://github.com/cactus/go-statsd-client/ for transport.
 type StatsdCollector struct {
-	client                  statsd.Statter
-	circuitOpenPrefix       string
-	attemptsPrefix          string
-	queueSizePrefix         string
-	errorsPrefix            string
-	successesPrefix         string
-	failuresPrefix          string
-	rejectsPrefix           string
-	shortCircuitsPrefix     string
-	timeoutsPrefix          string
-	fallbackSuccessesPrefix string
-	fallbackFailuresPrefix  string
-	totalDurationPrefix     string
-	runDurationPrefix       string
+	client                      statsd.Statter
+	circuitOpenPrefix           string
+	attemptsPrefix              string
+	queueSizePrefix             string
+	errorsPrefix                string
+	successesPrefix             string
+	failuresPrefix              string
+	rejectsPrefix               string
+	shortCircuitsPrefix         string
+	timeoutsPrefix              string
+	fallbackSuccessesPrefix     string
+	fallbackFailuresPrefix      string
+	totalDurationPrefix         string
+	runDurationPrefix           string
 	runDurationDerivativePrefix string
-	sampleRate              float32
+	sampleRate                  float32
 }
 
 type StatsdCollectorClient struct {
@@ -95,22 +94,22 @@ func (s *StatsdCollectorClient) NewStatsdCollector(name string, commandGroup str
 	commandGroup = formatStatsdString(commandGroup)
 
 	return &StatsdCollector{
-		client:                  s.client,
-		circuitOpenPrefix:       commandGroup + "." + name + ".circuitOpen",
-		attemptsPrefix:          commandGroup + "." + name + ".attempts",
-		errorsPrefix:            commandGroup + "." + name + ".errors",
-		queueSizePrefix:         commandGroup + "." + name + ".queueLength",
-		successesPrefix:         commandGroup + "." + name + ".successes",
-		failuresPrefix:          commandGroup + "." + name + ".failures",
-		rejectsPrefix:           commandGroup + "." + name + ".rejects",
-		shortCircuitsPrefix:     commandGroup + "." + name + ".shortCircuits",
-		timeoutsPrefix:          commandGroup + "." + name + ".timeouts",
-		fallbackSuccessesPrefix: commandGroup + "." + name + ".fallbackSuccesses",
-		fallbackFailuresPrefix:  commandGroup + "." + name + ".fallbackFailures",
-		totalDurationPrefix:     commandGroup + "." + name + ".totalDuration",
-		runDurationPrefix:       commandGroup + "." + name + ".runDuration",
+		client:                      s.client,
+		circuitOpenPrefix:           commandGroup + "." + name + ".circuitOpen",
+		attemptsPrefix:              commandGroup + "." + name + ".attempts",
+		errorsPrefix:                commandGroup + "." + name + ".errors",
+		queueSizePrefix:             commandGroup + "." + name + ".queueLength",
+		successesPrefix:             commandGroup + "." + name + ".successes",
+		failuresPrefix:              commandGroup + "." + name + ".failures",
+		rejectsPrefix:               commandGroup + "." + name + ".rejects",
+		shortCircuitsPrefix:         commandGroup + "." + name + ".shortCircuits",
+		timeoutsPrefix:              commandGroup + "." + name + ".timeouts",
+		fallbackSuccessesPrefix:     commandGroup + "." + name + ".fallbackSuccesses",
+		fallbackFailuresPrefix:      commandGroup + "." + name + ".fallbackFailures",
+		totalDurationPrefix:         commandGroup + "." + name + ".totalDuration",
+		runDurationPrefix:           commandGroup + "." + name + ".runDuration",
 		runDurationDerivativePrefix: commandGroup + "." + name + ".runDurationDerivative",
-		sampleRate:              s.sampleRate,
+		sampleRate:                  s.sampleRate,
 	}
 }
 

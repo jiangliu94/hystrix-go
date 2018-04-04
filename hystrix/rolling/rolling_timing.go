@@ -159,7 +159,7 @@ func (r *Timing) Derivative(interval int64) float64 {
 	defer r.Mutex.RUnlock()
 
 	for timestamp := range r.Buckets {
-		if timestamp >= time.Now().Unix() - interval {
+		if timestamp >= time.Now().Unix()-interval {
 			if isLowerLimit {
 				lowerLimit = timestamp
 				isLowerLimit = false
@@ -173,11 +173,11 @@ func (r *Timing) Derivative(interval int64) float64 {
 	for _, duration := range r.Buckets[lowerLimit].Durations {
 		lowerSum += duration.Nanoseconds()
 	}
-	lowerMean := float64(lowerSum)/ float64(len(r.Buckets[lowerLimit].Durations))
+	lowerMean := float64(lowerSum) / float64(len(r.Buckets[lowerLimit].Durations))
 	for _, duration := range r.Buckets[upperLimit].Durations {
 		upperSum += duration.Nanoseconds()
 	}
-	upperMean := float64(upperSum)/ float64(len(r.Buckets[upperLimit].Durations))
+	upperMean := float64(upperSum) / float64(len(r.Buckets[upperLimit].Durations))
 
-	return float64(upperMean - lowerMean) / float64(interval) / 1000000
+	return float64(upperMean-lowerMean) / float64(interval) / 1000000
 }
