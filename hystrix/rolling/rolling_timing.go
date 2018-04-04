@@ -151,33 +151,42 @@ func (r *Timing) Derivative(interval int64) float64 {
 	if interval <= 0 {
 		return 0
 	}
-	var lowerLimit, upperLimit int64
+	var upperLimit int64
 	var lowerSum, upperSum int64
+	var lowerMean, upperMean float64
+	var lowerDuration, upperDuration = []time.Duration{}, []time.Duration{}
 	isLowerLimit := true
 
 	r.Mutex.RLock()
 	defer r.Mutex.RUnlock()
 
-	for timestamp := range r.Buckets {
+	for timestamp, bucket := range r.Buckets {
 		if timestamp >= time.Now().Unix()-interval {
-			if isLowerLimit {
-				lowerLimit = timestamp
+			if isLowerLimit && len(bucket.Durations) > 0 {
+				lowerDuration = bucket.Durations
 				isLowerLimit = false
 
 			}
-			if timestamp > upperLimit {
-				upperLimit = timestamp
+			if timestamp > upperLimit && len(bucket.Durations) > 0 {
+				upperDuration = bucket.Durations
 			}
 		}
 	}
-	for _, duration := range r.Buckets[lowerLimit].Durations {
+	for _, duration := range lowerDuration {
 		lowerSum += duration.Nanoseconds()
 	}
-	lowerMean := float64(lowerSum) / float64(len(r.Buckets[lowerLimit].Durations))
-	for _, duration := range r.Buckets[upperLimit].Durations {
+
+	if len(lowerDuration) != 0 {
+		lowerMean = float64(lowerSum) / float64(len(lowerDuration))
+	}
+
+	for _, duration := range upperDuration {
 		upperSum += duration.Nanoseconds()
 	}
-	upperMean := float64(upperSum) / float64(len(r.Buckets[upperLimit].Durations))
+
+	if len(upperDuration) != 0 {
+		upperMean = float64(upperSum) / float64(len(upperDuration))
+	}
 
 	return float64(upperMean-lowerMean) / float64(interval) / 1000000
 }

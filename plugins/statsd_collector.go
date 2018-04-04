@@ -219,6 +219,8 @@ func (g *StatsdCollector) UpdateRunDuration(runDuration time.Duration) {
 	g.updateTimerMetric(g.runDurationPrefix, runDuration)
 }
 
+// UpdateRunDurationDerivative updates the internal counter of how fast the execution latency changes
+// This registers as a gauge in Statsd collector.
 func (g *StatsdCollector) UpdateRunDurationDerivative(derivative float64) {
 	g.setGauge(g.runDurationDerivativePrefix, int64(derivative))
 }

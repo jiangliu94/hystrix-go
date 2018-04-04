@@ -177,6 +177,8 @@ func (g *GraphiteCollector) UpdateRunDuration(runDuration time.Duration) {
 	g.updateTimerMetric(g.runDurationPrefix, runDuration)
 }
 
+// UpdateRunDurationDerivative updates the internal counter of how fast the execution latency changes
+// This registers as a gauge in graphite collector.
 func (g *GraphiteCollector) UpdateRunDurationDerivative(derivative float64) {
 	g.updateGaugeMetric(g.runDurationDerivativePrefix, derivative)
 }
