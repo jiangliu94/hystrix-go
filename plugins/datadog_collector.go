@@ -15,19 +15,20 @@ import (
 // own implemenation of DatadogClient
 const (
 	// DM = Datadog Metric
-	dmCircuitOpen       = "hystrix.circuitOpen"
-	dmAttempts          = "hystrix.attempts"
-	dmQueueLength       = "hystrix.queueLength"
-	dmErrors            = "hystrix.errors"
-	dmSuccesses         = "hystrix.successes"
-	dmFailures          = "hystrix.failures"
-	dmRejects           = "hystrix.rejects"
-	dmShortCircuits     = "hystrix.shortCircuits"
-	dmTimeouts          = "hystrix.timeouts"
-	dmFallbackSuccesses = "hystrix.fallbackSuccesses"
-	dmFallbackFailures  = "hystrix.fallbackFailures"
-	dmTotalDuration     = "hystrix.totalDuration"
-	dmRunDuration       = "hystrix.runDuration"
+	dmCircuitOpen           = "hystrix.circuitOpen"
+	dmAttempts              = "hystrix.attempts"
+	dmQueueLength           = "hystrix.queueLength"
+	dmErrors                = "hystrix.errors"
+	dmSuccesses             = "hystrix.successes"
+	dmFailures              = "hystrix.failures"
+	dmRejects               = "hystrix.rejects"
+	dmShortCircuits         = "hystrix.shortCircuits"
+	dmTimeouts              = "hystrix.timeouts"
+	dmFallbackSuccesses     = "hystrix.fallbackSuccesses"
+	dmFallbackFailures      = "hystrix.fallbackFailures"
+	dmTotalDuration         = "hystrix.totalDuration"
+	dmRunDuration           = "hystrix.runDuration"
+	dmRunDurationDerivative = "hystrix.runDurationDerivative"
 )
 
 type (

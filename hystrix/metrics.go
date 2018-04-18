@@ -111,7 +111,6 @@ func (m *metricExchange) IncrementMetrics(wg *sync.WaitGroup, collector metricCo
 
 	collector.UpdateTotalDuration(totalDuration)
 	collector.UpdateRunDuration(update.RunDuration)
-
 	wg.Done()
 }
 
