@@ -32,14 +32,11 @@ func NewCalibrator() Calibrator {
 func (c *calibrator) Register(config Config) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
-	metricCollector.Registry.Register(func(string, string) metricCollector.MetricCollector {
-		c.mutex.RLock()
-		defer c.mutex.RUnlock()
-		c.configs[config.Name] = &config
-		collector := NewCollector(config)
-		c.Collectors[config.Name] = collector
-		return collector
-	})
+	c.configs[config.Name] = &config
+	collector := NewCollector(config)
+	c.Collectors[config.Name] = collector
+	circuit, _, _ := hystrix.GetCircuit(config.Name)
+	circuit.WithCollector(collector)
 }
 
 func (c *calibrator) Calibrate() {

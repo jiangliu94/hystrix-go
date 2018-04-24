@@ -36,6 +36,13 @@ func newMetricExchange(name string, commandGroup string) *metricExchange {
 	return m
 }
 
+func (m *metricExchange) addCollector(collector metricCollector.MetricCollector) {
+	m.Mutex.Lock()
+	defer m.Mutex.Unlock()
+
+	m.metricCollectors = append(m.metricCollectors, collector)
+}
+
 // The Default Collector function will panic if collectors are not setup to specification.
 func (m *metricExchange) DefaultCollector() *metricCollector.DefaultMetricCollector {
 	if len(m.metricCollectors) < 1 {

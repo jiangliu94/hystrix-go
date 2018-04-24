@@ -6,6 +6,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
+	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 // CircuitBreaker is created for each ExecutorPool to track whether requests
@@ -77,6 +80,13 @@ func newCircuitBreaker(name string) *CircuitBreaker {
 	c.mutex = &sync.RWMutex{}
 
 	return c
+}
+
+// WithCollector allows clients to add customized metrics collector to the circuit
+func (circuit *CircuitBreaker) WithCollector(collector metricCollector.MetricCollector) {
+	circuit.mutex.RLock()
+	circuit.mutex.RUnlock()
+	circuit.metrics.addCollector(collector)
 }
 
 // toggleForceOpen allows manually causing the fallback logic for all instances
