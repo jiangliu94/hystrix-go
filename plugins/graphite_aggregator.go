@@ -9,12 +9,10 @@ import (
 
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
 	"github.com/rcrowley/go-metrics"
-	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 var makeTimerFunc = func() interface{} { return metrics.NewTimer() }
 var makeCounterFunc = func() interface{} { return metrics.NewCounter() }
-var makeGaugeFunc = func() interface{} { return metrics.NewGaugeFloat64() }
 
 // GraphiteCollector fulfills the metricCollector interface allowing users to ship circuit
 // stats to a graphite backend. To use users must call InitializeGraphiteCollector before
@@ -23,19 +21,18 @@ var makeGaugeFunc = func() interface{} { return metrics.NewGaugeFloat64() }
 // This Collector uses github.com/rcrowley/go-metrics for aggregation. See that repo for more details
 // on how metrics are aggregated and expressed in graphite.
 type GraphiteCollector struct {
-	attemptsPrefix              string
-	queueSizePrefix             string
-	errorsPrefix                string
-	successesPrefix             string
-	failuresPrefix              string
-	rejectsPrefix               string
-	shortCircuitsPrefix         string
-	timeoutsPrefix              string
-	fallbackSuccessesPrefix     string
-	fallbackFailuresPrefix      string
-	totalDurationPrefix         string
-	runDurationPrefix           string
-	runDurationDerivativePrefix string
+	attemptsPrefix          string
+	queueSizePrefix         string
+	errorsPrefix            string
+	successesPrefix         string
+	failuresPrefix          string
+	rejectsPrefix           string
+	shortCircuitsPrefix     string
+	timeoutsPrefix          string
+	fallbackSuccessesPrefix string
+	fallbackFailuresPrefix  string
+	totalDurationPrefix     string
+	runDurationPrefix       string
 }
 
 // GraphiteCollectorConfig provides configuration that the graphite client will need.
@@ -62,18 +59,18 @@ func NewGraphiteCollector(name string, commandGroup string) metricCollector.Metr
 	name = strings.Replace(name, ":", "-", -1)
 	name = strings.Replace(name, ".", "-", -1)
 	return &GraphiteCollector{
-		attemptsPrefix:              commandGroup + "." + name + ".attempts",
-		errorsPrefix:                commandGroup + "." + name + ".errors",
-		queueSizePrefix:             commandGroup + "." + name + ".queueLength",
-		successesPrefix:             commandGroup + "." + name + ".successes",
-		failuresPrefix:              commandGroup + "." + name + ".failures",
-		rejectsPrefix:               commandGroup + "." + name + ".rejects",
-		shortCircuitsPrefix:         commandGroup + "." + name + ".shortCircuits",
-		timeoutsPrefix:              commandGroup + "." + name + ".timeouts",
-		fallbackSuccessesPrefix:     commandGroup + "." + name + ".fallbackSuccesses",
-		fallbackFailuresPrefix:      commandGroup + "." + name + ".fallbackFailures",
-		totalDurationPrefix:         commandGroup + "." + name + ".totalDuration",
-		runDurationPrefix:           commandGroup + "." + name + ".runDuration",
+		attemptsPrefix:          commandGroup + "." + name + ".attempts",
+		errorsPrefix:            commandGroup + "." + name + ".errors",
+		queueSizePrefix:         commandGroup + "." + name + ".queueLength",
+		successesPrefix:         commandGroup + "." + name + ".successes",
+		failuresPrefix:          commandGroup + "." + name + ".failures",
+		rejectsPrefix:           commandGroup + "." + name + ".rejects",
+		shortCircuitsPrefix:     commandGroup + "." + name + ".shortCircuits",
+		timeoutsPrefix:          commandGroup + "." + name + ".timeouts",
+		fallbackSuccessesPrefix: commandGroup + "." + name + ".fallbackSuccesses",
+		fallbackFailuresPrefix:  commandGroup + "." + name + ".fallbackFailures",
+		totalDurationPrefix:     commandGroup + "." + name + ".totalDuration",
+		runDurationPrefix:       commandGroup + "." + name + ".runDuration",
 	}
 }
 
@@ -91,14 +88,6 @@ func (g *GraphiteCollector) updateTimerMetric(prefix string, dur time.Duration) 
 		return
 	}
 	c.Update(dur)
-}
-
-func (g *GraphiteCollector) updateGaugeMetric(prefix string, value float64) {
-	c, ok := metrics.GetOrRegister(prefix, makeGaugeFunc).(metrics.GaugeFloat64)
-	if !ok {
-		return
-	}
-	c.Update(value)
 }
 
 // IncrementAttempts increments the number of calls to this circuit.
@@ -175,12 +164,6 @@ func (g *GraphiteCollector) UpdateTotalDuration(timeSinceStart time.Duration) {
 // This registers as a timer in the graphite collector.
 func (g *GraphiteCollector) UpdateRunDuration(runDuration time.Duration) {
 	g.updateTimerMetric(g.runDurationPrefix, runDuration)
-}
-
-// UpdateRunDurationDerivative updates the internal counter of how fast the execution latency changes
-// This registers as a gauge in graphite collector.
-func (g *GraphiteCollector) UpdateRunDurationDerivative(derivative float64) {
-	g.updateGaugeMetric(g.runDurationDerivativePrefix, derivative)
 }
 
 // Reset is a noop operation in this collector.

@@ -8,14 +8,13 @@ import (
 type NumberStream struct {
 	// config stores the static configuration of this stream
 	config Config
-	mutex *sync.RWMutex
+	mutex  *sync.RWMutex
 	// below stores dynamic data collected/calculated from the real time execution
-	Buffer []float64
-	DerivativeBuffer []float64
+	Buffer                       []float64
+	DerivativeBuffer             []float64
 	CurrentDerivativeBufferIndex int
-	LastUpdatedAt int64
-	AccumulatedAverage float64
-
+	LastUpdatedAt                int64
+	AccumulatedAverage           float64
 }
 
 func (s *NumberStream) Increment(value float64) {
@@ -38,13 +37,13 @@ func NewNumberStream(config Config) *NumberStream {
 	buffer := make([]float64, config.AveragingWindowSize)
 	derivativeBuffer := make([]float64, config.CalibrationWindowSize)
 	return &NumberStream{
-		mutex: 	&sync.RWMutex{},
-		config: config,
-		Buffer: buffer,
-		DerivativeBuffer: derivativeBuffer,
+		mutex:                        &sync.RWMutex{},
+		config:                       config,
+		Buffer:                       buffer,
+		DerivativeBuffer:             derivativeBuffer,
 		CurrentDerivativeBufferIndex: 0,
-		LastUpdatedAt: 0,
-		AccumulatedAverage: 0,
+		LastUpdatedAt:                0,
+		AccumulatedAverage:           0,
 	}
 
 }
@@ -72,7 +71,7 @@ func (s *NumberStream) getPreviousBufferIndex(now int64, n int) int {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 	length := len(s.Buffer)
-	return (int(now) + length - n % length) % length
+	return (int(now) + length - n%length) % length
 }
 
 func (s *NumberStream) updateAverage(now int64) {
@@ -96,26 +95,27 @@ func (s *NumberStream) updateAverage(now int64) {
 func (s *NumberStream) updateDerivatives(now int64) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	if len(s.Buffer) <= 2 || s.config.DerivativeCalculationInterval < 1 || s.config.DerivativeCalculationInterval % len(s.Buffer) == 0 {
+	if len(s.Buffer) <= 2 || s.config.DerivativeCalculationInterval < 1 || s.config.DerivativeCalculationInterval%len(s.Buffer) == 0 {
 		// nothing to calculate since the number of data point is too little
 		// or it is always comparing the same data point
 		return
 	}
-	if !(int(now) % s.config.CalibrationWindowSize == 0) {
+	if int(now)%s.config.DerivativeCalculationInterval != 0 {
 		// not the right time to calculate the derivative
 		return
 	}
 
-	lowerBound := s.getPreviousBufferIndex(now, s.config.DerivativeCalculationInterval + 1)
+	lowerBound := s.getPreviousBufferIndex(now, s.config.DerivativeCalculationInterval+1)
 	upperBound := s.getPreviousBufferIndex(now, 1)
-	s.DerivativeBuffer[s.getNewDerivativeBufferIndex()] = (s.Buffer[upperBound] - s.Buffer[lowerBound]) / (float64 (s.config.DerivativeCalculationInterval) )
+	s.DerivativeBuffer[s.getNewDerivativeBufferIndex()] = (s.Buffer[upperBound] - s.Buffer[lowerBound]) / (float64(s.config.DerivativeCalculationInterval))
 
 }
 
 func (s *NumberStream) getNewDerivativeBufferIndex() int {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
-	return (s.CurrentDerivativeBufferIndex + 1) % len(s.DerivativeBuffer)
+	s.CurrentDerivativeBufferIndex = (s.CurrentDerivativeBufferIndex + 1) % len(s.DerivativeBuffer)
+	return s.CurrentDerivativeBufferIndex
 }
 
 func (s *NumberStream) IsToScaleUp() bool {
@@ -127,7 +127,12 @@ func (s *NumberStream) IsToScaleUp() bool {
 			return false
 		}
 	}
-	return s.AccumulatedAverage / s.config.PredefinedLimit.UpperBound >= s.config.UtilisationLimit.UpperBound
+	utilisation := s.AccumulatedAverage / s.config.PredefinedLimit.UpperBound
+	// Only scale up when
+	// 1. long term average above threshold
+	// 2. long term average not reaching the hard upper limit
+	// 3. the trend is increasing slowly and gently
+	return utilisation >= s.config.UtilisationLimit.UpperBound && utilisation < 1
 }
 
 func (s *NumberStream) IsToScaleDown() bool {
@@ -139,5 +144,12 @@ func (s *NumberStream) IsToScaleDown() bool {
 			return false
 		}
 	}
-	return s.AccumulatedAverage / s.config.PredefinedLimit.LowerBound <= s.config.UtilisationLimit.LowerBound
+
+	// has to be upperbound here
+	utilisation := s.AccumulatedAverage / s.config.PredefinedLimit.UpperBound
+	// Only scale down when
+	// 1. long term average is below the threshold
+	// 2. long term average is not reaching the hard lower limit
+	// 3. the trend is decreasing
+	return utilisation <= s.config.UtilisationLimit.LowerBound && s.AccumulatedAverage > s.config.PredefinedLimit.LowerBound
 }

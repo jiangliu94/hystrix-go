@@ -3,13 +3,14 @@ package calibrator
 import (
 	"sync"
 	"time"
-	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
-	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 type Collector struct {
 	mutex *sync.RWMutex
+	// static configs
 	CalibrationConfig Config
+
+	// dynamic data collector
 	numRequests *NumberStream
 	errors      *NumberStream
 
@@ -26,26 +27,110 @@ type Collector struct {
 	runDuration       *DurationStream
 }
 
-func NewCollector(config Config) metricCollector.MetricCollector {
+func NewCollector(config Config) *Collector {
 	cfg := config.validate()
 	collector := &Collector{
 		CalibrationConfig: cfg,
-		mutex: 	&sync.RWMutex{},
-		numRequests: NewNumberStream(cfg),
-		errors: NewNumberStream(cfg),
-		successes: NewNumberStream(cfg),
-		queueSize: NewNumberStream(cfg),
-		failures: NewNumberStream(cfg),
-		rejects: NewNumberStream(cfg),
-		shortCircuits: NewNumberStream(cfg),
-		timeouts: NewNumberStream(cfg),
+		mutex:             &sync.RWMutex{},
+		numRequests:       NewNumberStream(cfg),
+		errors:            NewNumberStream(cfg),
+		successes:         NewNumberStream(cfg),
+		queueSize:         NewNumberStream(cfg),
+		failures:          NewNumberStream(cfg),
+		rejects:           NewNumberStream(cfg),
+		shortCircuits:     NewNumberStream(cfg),
+		timeouts:          NewNumberStream(cfg),
 
 		fallbackSuccesses: NewNumberStream(cfg),
-		fallbackFailures: NewNumberStream(cfg),
-		totalDuration: NewDurationStream(cfg),
-		runDuration: NewDurationStream(cfg),
+		fallbackFailures:  NewNumberStream(cfg),
+		totalDuration:     NewDurationStream(cfg),
+		runDuration:       NewDurationStream(cfg),
 	}
 	return collector
+}
+
+// NumRequests returns the rolling number of requests
+func (c *Collector) NumRequests() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.numRequests
+}
+
+// QueueSize returns the rolling number of queue length
+func (c *Collector) QueueSize() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.queueSize
+}
+
+// Errors returns the rolling number of errors
+func (c *Collector) Errors() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.errors
+}
+
+// Successes returns the rolling number of successes
+func (c *Collector) Successes() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.successes
+}
+
+// Failures returns the rolling number of failures
+func (c *Collector) Failures() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.failures
+}
+
+// Rejects returns the rolling number of rejects
+func (c *Collector) Rejects() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.rejects
+}
+
+// ShortCircuits returns the rolling number of short circuits
+func (c *Collector) ShortCircuits() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.shortCircuits
+}
+
+// Timeouts returns the rolling number of timeouts
+func (c *Collector) Timeouts() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.timeouts
+}
+
+// FallbackSuccesses returns the rolling number of fallback successes
+func (c *Collector) FallbackSuccesses() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.fallbackSuccesses
+}
+
+// FallbackFailures returns the rolling number of fallback failures
+func (c *Collector) FallbackFailures() *NumberStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.fallbackFailures
+}
+
+// TotalDuration returns the rolling total duration
+func (c *Collector) TotalDuration() *DurationStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.totalDuration
+}
+
+// RunDuration returns the rolling run duration
+func (c *Collector) RunDuration() *DurationStream {
+	c.mutex.RLock()
+	defer c.mutex.RUnlock()
+	return c.runDuration
 }
 
 func (c *Collector) IncrementAttempts() {

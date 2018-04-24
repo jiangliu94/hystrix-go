@@ -1,22 +1,21 @@
 package calibrator
 
 import (
-	"time"
 	"sync"
+	"time"
 )
 
 type DurationStream struct {
 	// config stores the static configuration of this stream
 	config Config
-	mutex *sync.RWMutex
+	mutex  *sync.RWMutex
 	// below stores dynamic data collected/calculated from the real time execution
-	Buffer [][]time.Duration
-	MeanBuffer []time.Duration
-	DerivativeBuffer []float64
+	Buffer                       [][]time.Duration
+	MeanBuffer                   []time.Duration
+	DerivativeBuffer             []float64
 	CurrentDerivativeBufferIndex int
-	LastUpdatedAt int64
-	AccumulatedAverage time.Duration
-
+	LastUpdatedAt                int64
+	AccumulatedAverage           time.Duration
 }
 
 func NewDurationStream(config Config) *DurationStream {
@@ -28,14 +27,14 @@ func NewDurationStream(config Config) *DurationStream {
 	derivativeBuffer := make([]float64, config.CalibrationWindowSize)
 
 	return &DurationStream{
-		mutex: 	&sync.RWMutex{},
-		config: config,
-		Buffer: buffer,
-		MeanBuffer: meanBuffer,
-		DerivativeBuffer: derivativeBuffer,
+		mutex:                        &sync.RWMutex{},
+		config:                       config,
+		Buffer:                       buffer,
+		MeanBuffer:                   meanBuffer,
+		DerivativeBuffer:             derivativeBuffer,
 		CurrentDerivativeBufferIndex: 0,
-		LastUpdatedAt: 0,
-		AccumulatedAverage: 0,
+		LastUpdatedAt:                0,
+		AccumulatedAverage:           0,
 	}
 
 }
@@ -74,7 +73,7 @@ func (d *DurationStream) updateMean(now int64, value time.Duration) {
 		return
 	}
 
-	d.MeanBuffer[index] = (d.MeanBuffer[index] * time.Duration(len(d.Buffer[index]) - 1) + value) / time.Duration(len(d.Buffer[index]))
+	d.MeanBuffer[index] = (d.MeanBuffer[index]*time.Duration(len(d.Buffer[index])-1) + value) / time.Duration(len(d.Buffer[index]))
 }
 
 func (d *DurationStream) updateAverage(now int64) {
@@ -96,30 +95,29 @@ func (d *DurationStream) updateAverage(now int64) {
 
 }
 
-
 func (d *DurationStream) updateDerivatives(now int64) {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
-	if len(d.Buffer) <= 2 || d.config.DerivativeCalculationInterval < 1 || d.config.DerivativeCalculationInterval % len(d.Buffer) == 0 {
+	if len(d.Buffer) <= 2 || d.config.DerivativeCalculationInterval < 1 || d.config.DerivativeCalculationInterval%len(d.Buffer) == 0 {
 		// nothing to calculate since the number of data point is too little
 		// or it is always comparing the same data point
 		return
 	}
-	if !(int(now) % d.config.CalibrationWindowSize == 0) {
+	if !(int(now)%d.config.CalibrationWindowSize == 0) {
 		// not the right time to calculate the derivative
 		return
 	}
 
-	lowerBound := d.getPreviousBufferIndex(now, d.config.DerivativeCalculationInterval + 1)
+	lowerBound := d.getPreviousBufferIndex(now, d.config.DerivativeCalculationInterval+1)
 	upperBound := d.getPreviousBufferIndex(now, 1)
-	d.DerivativeBuffer[d.getNewDerivativeBufferIndex()] = float64 (d.MeanBuffer[upperBound] - d.MeanBuffer[lowerBound]) / (float64 (d.config.DerivativeCalculationInterval) )
+	d.DerivativeBuffer[d.getNewDerivativeBufferIndex()] = float64(d.MeanBuffer[upperBound]-d.MeanBuffer[lowerBound]) / (float64(d.config.DerivativeCalculationInterval))
 }
 
 func (d *DurationStream) getPreviousBufferIndex(now int64, n int) int {
 	d.mutex.RLock()
 	defer d.mutex.RUnlock()
 	length := len(d.Buffer)
-	return (int(now) + length - n % length) % length
+	return (int(now) + length - n%length) % length
 }
 
 func (d *DurationStream) getNewDerivativeBufferIndex() int {
@@ -137,7 +135,12 @@ func (d *DurationStream) IsToScaleUp() bool {
 			return false
 		}
 	}
-	return float64(d.AccumulatedAverage) / d.config.PredefinedLimit.UpperBound >= d.config.UtilisationLimit.UpperBound
+	utilisation := float64(d.AccumulatedAverage/time.Millisecond) / d.config.PredefinedLimit.UpperBound
+	// Only scale up when
+	// 1. long term average above threshold
+	// 2. long term average not reaching the hard upper limit
+	// 3. the trend is increasing slowly and gently
+	return utilisation >= d.config.UtilisationLimit.UpperBound && utilisation < 1
 }
 
 func (d *DurationStream) IsToScaleDown() bool {
@@ -149,7 +152,12 @@ func (d *DurationStream) IsToScaleDown() bool {
 			return false
 		}
 	}
-	return float64(d.AccumulatedAverage) / d.config.PredefinedLimit.LowerBound <= d.config.UtilisationLimit.LowerBound
+	utilisation := float64(d.AccumulatedAverage/time.Millisecond) / d.config.PredefinedLimit.UpperBound
+	// Only scale up when
+	// 1. long term average below threshold
+	// 2. long term average not reaching the hard lower limit
+	// 3. the trend is decreasing slowly and gently
+	return utilisation < d.config.UtilisationLimit.LowerBound && float64(d.AccumulatedAverage/time.Millisecond) > d.config.PredefinedLimit.LowerBound
 }
 
 func (d *DurationStream) reset() {
@@ -161,7 +169,7 @@ func (d *DurationStream) reset() {
 		d.MeanBuffer[index] = 0
 		d.DerivativeBuffer[index] = 0
 	}
-	d.CurrentDerivativeBufferIndex  = 0
+	d.CurrentDerivativeBufferIndex = 0
 	d.LastUpdatedAt = 0
 	d.AccumulatedAverage = 0
 }
