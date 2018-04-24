@@ -27,8 +27,6 @@ func (s *NumberStream) Increment(value float64) {
 		s.Buffer[s.getCurrentBufferIndex(s.LastUpdatedAt)] = 0
 		s.updateAverage(s.LastUpdatedAt)
 		s.updateDerivatives(s.LastUpdatedAt)
-
-		// TODO: Implement the calibration logic
 	}
 	s.Buffer[s.getCurrentBufferIndex(s.LastUpdatedAt)] += value
 }

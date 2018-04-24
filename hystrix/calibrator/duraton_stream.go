@@ -50,7 +50,6 @@ func (d *DurationStream) Append(value time.Duration) {
 		d.Buffer[index] = []time.Duration{}
 		d.updateAverage(d.LastUpdatedAt)
 		d.updateDerivatives(d.LastUpdatedAt)
-		// TODO: Implement the calibration logic
 	}
 	d.Buffer[index] = append(d.Buffer[index], value)
 	d.updateMean(d.LastUpdatedAt, value)
