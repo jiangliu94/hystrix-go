@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/myteksi/hystrix-go/hystrix"
-	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
 )
 
 type Calibrator interface {
