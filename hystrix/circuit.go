@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/myteksi/hystrix-go/hystrix/metric_collector"
-	"gitlab.myteksi.net/gophers/go/commons/util/resilience/hystrix/metric_collector"
 )
 
 // CircuitBreaker is created for each ExecutorPool to track whether requests
