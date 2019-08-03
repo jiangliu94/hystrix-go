@@ -30,7 +30,7 @@ type StreamHandler struct {
 func (sh *StreamHandler) Start() {
 	sh.requests = make(map[*http.Request]chan []byte)
 	sh.done = make(chan struct{})
-	go sh.loop()
+	//go sh.loop()
 }
 
 // Stop shuts down the metric collection routine
